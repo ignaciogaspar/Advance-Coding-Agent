@@ -1,0 +1,11 @@
+# --- Núcleo ---
+openai>=1.40.0          # cliente LLM + embeddings
+requests>=2.31.0        # búsqueda web (Tavily)
+PyYAML>=6.0             # lectura de agent.config.yaml
+numpy>=1.24.0           # vector store local (similitud coseno)
+
+# --- Observabilidad ---
+langfuse>=2.0.0         # trazas de prompts, tools, tokens, costo, latencia
+
+# --- Opcionales (sólo para pruebas / ingest enriquecido) ---
+# tiktoken>=0.5.0       # conteo de tokens preciso (si no, se estima)

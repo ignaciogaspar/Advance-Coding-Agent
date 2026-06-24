@@ -1,0 +1,77 @@
+# ============================================================
+#  Configuración del Coding Agent Avanzado
+#  Esta configuración se valida ANTES de cada tool call.
+# ============================================================
+
+# Directorio raíz sobre el que opera el agente. Toda lectura/escritura
+# se restringe a este workspace (defensa contra path traversal).
+workspace: ./example_project
+
+# Modelos de OpenAI
+models:
+  chat: gpt-4o-mini            # modelo de razonamiento del orquestador y subagentes
+  embeddings: text-embedding-3-small
+
+# Límites de control del loop agéntico
+limits:
+  max_iterations: 12           # tope de pasos por turno de cada agente
+  max_subagent_calls: 8        # tope de delegaciones del orquestador por tarea
+  loop_window: 3               # nº de acciones idénticas seguidas que disparan "loop detectado"
+  context_token_budget: 8000   # presupuesto antes de resumir el historial
+
+# RAG
+rag:
+  index_path: ./data/rag_index.json
+  top_k: 4                     # documentos recuperados por consulta
+  min_score: 0.20             # score mínimo de similitud para considerar evidencia "suficiente"
+  chunk_size: 800             # caracteres por chunk
+  chunk_overlap: 150          # solape entre chunks
+
+# Memoria persistente del proyecto
+memory:
+  path: ./data/project_memory.json
+
+# Observabilidad (Langfuse). Si faltan las claves, el agente sigue
+# funcionando pero loguea sólo a archivo (tracing degradado).
+observability:
+  provider: langfuse
+  enabled: true
+  local_log: ./data/traces.jsonl
+
+# ============================================================
+#  POLÍTICAS DE SEGURIDAD
+#  Patrones glob/substring. deny gana sobre allow.
+# ============================================================
+permissions:
+  read:
+    deny:
+      - ".env"
+      - "**/*.pem"
+      - "**/*.key"
+      - "secrets/**"
+      - "**/id_rsa"
+  write:
+    deny:
+      - ".github/**"
+      - "package-lock.json"
+      - "poetry.lock"
+      - "**/*.lock"
+      - ".env"
+
+commands:
+  # Comandos prohibidos por completo (se evalúa por substring).
+  deny:
+    - "rm -rf"
+    - "git push"
+    - "shutdown"
+    - "mkfs"
+    - ":(){"          # fork bomb
+    - "dd if="
+  # Comandos que requieren aprobación humana explícita antes de ejecutar.
+  require_approval:
+    - "npm install"
+    - "pip install"
+    - "git commit"
+    - "git reset"
+    - "curl"
+    - "wget"

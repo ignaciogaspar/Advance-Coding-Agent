@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+data/rag_index.json
+data/project_memory.json
+data/traces.jsonl
+.pytest_cache/
+*.egg-info/
+venv/
+.venv/
