@@ -29,6 +29,15 @@
   texto o markdown; hubo que hacer el parser tolerante (extraer el primer bloque
   `{...}`). Con modelos más chicos esto es más frágil; convendría usar
   *structured outputs* / *function calling* para la decisión del orquestador.
+- **Caso real detectado vía observabilidad.** En la corrida real de la Demo 4
+  (traza `a97491ba…` en Langfuse), el orquestador decidió `finish` con la
+  respuesta correcta, pero incluyó saltos de línea literales dentro del string
+  `final` del JSON → `json.loads` falló → el fallback degradó a `need_user` y la
+  corrida cerró `blocked` a pesar de tener la respuesta lista. La traza permitió
+  ver la decisión cruda del modelo y diagnosticarlo en minutos. Fix aplicado:
+  `json.loads(..., strict=False)` + rescate de la acción por regex. Es un buen
+  ejemplo del valor de la observabilidad: sin la traza, el síntoma ("pidió ayuda
+  sin motivo") era indistinguible de una falta de evidencia real.
 - **Coordinación de path en el sandbox.** Borrar archivos en la carpeta montada
   estaba restringido; ajustamos las demos para *resetear* contenido en vez de
   *borrar* archivos.

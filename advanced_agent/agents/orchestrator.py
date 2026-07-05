@@ -162,9 +162,21 @@ class Orchestrator:
             text = text.split("```")[1].replace("json", "", 1).strip()
         start, end = text.find("{"), text.rfind("}")
         if start != -1 and end != -1:
+            blob = text[start:end + 1]
             try:
-                return json.loads(text[start:end + 1])
+                # strict=False tolera saltos de línea/control chars literales
+                # dentro de los strings (los modelos suelen emitirlos en "final").
+                return json.loads(blob, strict=False)
             except Exception:  # noqa: BLE001
                 pass
+        # Último recurso: rescatar al menos la acción con regex para no
+        # degradar a need_user por un detalle de formato.
+        import re
+        m = re.search(r'"action"\s*:\s*"(delegate|finish|need_user)"', text)
+        if m and m.group(1) == "finish":
+            fm = re.search(r'"final"\s*:\s*"(.*)"\s*}?\s*$', text, re.DOTALL)
+            return {"action": "finish",
+                    "final": (fm.group(1).replace('\\n', '\n')
+                              if fm else text[start:end + 1])}
         return {"action": "need_user",
                 "final": f"No pude parsear la decisión: {content[:200]}"}

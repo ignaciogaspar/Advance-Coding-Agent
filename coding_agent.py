@@ -177,7 +177,7 @@ def start_coding_agent(plan_mode=True, supervision_mode=True, max_iterations=10)
           f"Supervisión: {supervision_mode} | Max Iters: {max_iterations}")
 
     while True:
-        user_input = input("\n👤 Tú: ")
+        user_input = input("\nTú: ")
         if user_input.lower() in ["salir", "exit"]:
             break
         messages.append({"role": "user", "content": user_input})
@@ -192,9 +192,9 @@ def start_coding_agent(plan_mode=True, supervision_mode=True, max_iterations=10)
                         "content": "Genera un plan detallado. NO uses herramientas todavía."}],
                 )
                 plan = res.choices[0].message.content
-                print(f"\n📝 PLAN:\n{plan}")
+                print(f"\nPLAN:\n{plan}")
 
-                feedback = input("\n❓ ¿Aprobar? (s/n/comentario): ")
+                feedback = input("\n¿Aprobar? (s/n/comentario): ")
                 if feedback.lower() != "s":
                     messages.append({"role": "assistant", "content": plan})
                     messages.append({"role": "user",
@@ -241,7 +241,7 @@ def start_coding_agent(plan_mode=True, supervision_mode=True, max_iterations=10)
                     print(f"⚡ Tool: {name}({args})")
 
                     if supervision_mode and name in ["write_file", "run_command"]:
-                        if input(f"⚠️  ¿Autorizar {name}? (s/n): ").lower() != "s":
+                        if input(f"¿Autorizar {name}? (s/n): ").lower() != "s":
                             result = "Error: Usuario denegó ejecución."
                         else:
                             result = available_tools[name](**args)
@@ -255,10 +255,10 @@ def start_coding_agent(plan_mode=True, supervision_mode=True, max_iterations=10)
                         "content": str(result),
                     })
             except Exception as e:
-                print(f"❌ Error: {e}")
+                print(f"Error: {e}")
                 break
         else:
-            print("⚠️ Límite alcanzado.")
+            print("Límite alcanzado.")
 
 
 if __name__ == "__main__":

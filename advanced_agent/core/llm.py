@@ -33,7 +33,13 @@ class LLMClient:
     def _openai(self):
         if self._client is None:
             from openai import OpenAI
-            self._client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            kwargs = {"api_key": os.environ.get("OPENAI_API_KEY")}
+            # Permite usar proveedores OpenAI-compatibles (p.ej. Gemini):
+            # export OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+            base_url = os.environ.get("OPENAI_BASE_URL")
+            if base_url:
+                kwargs["base_url"] = base_url
+            self._client = OpenAI(**kwargs)
         return self._client
 
     # ---------------- chat ----------------
@@ -59,7 +65,8 @@ class LLMClient:
                                   "temperature": temperature}
         if tools:
             kwargs["tools"] = tools
-        resp = self._openai().chat.completions.create(**kwargs)
+        resp = self._with_rate_limit_retry(
+            lambda: self._openai().chat.completions.create(**kwargs))
         msg = resp.choices[0].message
         latency = round(time.time() - start, 4)
 
@@ -87,12 +94,34 @@ class LLMClient:
                                 sum(_approx_tokens(t) for t in texts), 0,
                                 round(time.time() - start, 4))
             return vecs
-        resp = self._openai().embeddings.create(model=self.embed_model, input=texts)
+        resp = self._with_rate_limit_retry(
+            lambda: self._openai().embeddings.create(model=self.embed_model, input=texts))
         self.tracer.log_llm(self.embed_model, f"{len(texts)} texts",
                             getattr(resp, "usage", None) and resp.usage.total_tokens
                             or sum(_approx_tokens(t) for t in texts), 0,
                             round(time.time() - start, 4))
         return [d.embedding for d in resp.data]
+
+    # ---------------- retry ante rate limit (429) ----------------
+    @staticmethod
+    def _with_rate_limit_retry(call, max_retries: int = 5):
+        """Reintenta con espera cuando el proveedor devuelve 429 (cuota/minuto).
+
+        Necesario con el free tier de Gemini (~pocas requests por minuto):
+        parsea el 'retry in Ns' sugerido o usa backoff exponencial."""
+        import re
+        from openai import RateLimitError
+        for attempt in range(max_retries + 1):
+            try:
+                return call()
+            except RateLimitError as e:
+                if attempt == max_retries:
+                    raise
+                m = re.search(r"retry in ([0-9.]+)s", str(e), re.IGNORECASE)
+                wait = float(m.group(1)) + 1 if m else min(15 * (2 ** attempt), 60)
+                print(f"    [rate-limit] esperando {wait:.0f}s "
+                      f"(intento {attempt + 1}/{max_retries})...")
+                time.sleep(wait)
 
     # ---------------- mocks deterministas ----------------
     def _mock_chat(self, messages: list[dict], tools: list[dict] | None) -> dict:

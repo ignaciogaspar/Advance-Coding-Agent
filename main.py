@@ -84,12 +84,12 @@ def main() -> None:
 def _run_once(system, request: str, show_state: bool = False) -> None:
     print(f"\n[trace_id={system.tracer.trace_id}]")
     answer = system.run(request)
-    print("\n🤖 Respuesta final:\n" + answer)
+    print("\nRespuesta final:\n" + answer)
     m = system.state.metrics
-    print(f"\n📊 Métricas: llm_calls={m['llm_calls']} tool_calls={m['tool_calls']} "
+    print(f"\nMétricas: llm_calls={m['llm_calls']} tool_calls={m['tool_calls']} "
           f"subagentes={m['subagent_calls']} tokens={m['tokens']} "
           f"costo≈${m['cost_usd']} errores={m.get('errors', 0)}")
-    print("📚 Fuentes por origen: " +
+    print("Fuentes por origen: " +
           ", ".join(f"{k}={len(v)}" for k, v in system.state.sources_by_kind().items())
           or "(ninguna)")
     if show_state:
