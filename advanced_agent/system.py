@@ -76,6 +76,7 @@ class AgentSystem:
         """
         self.tracer = Tracer(self.config.observability, run_name=run_name)
         self.ctx.tracer = self.tracer
+        self.llm.tracer = self.tracer
         self.orchestrator = Orchestrator(self.ctx, self.registry)
 
     def run(self, request: str) -> str:

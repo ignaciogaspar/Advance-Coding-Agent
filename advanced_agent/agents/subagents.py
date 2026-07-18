@@ -57,8 +57,12 @@ class ImplementerAgent(BaseAgent):
             "read_file y, si necesitás patrones de la tecnología, usá rag_search. "
             "Escribí con write_file (respeta las políticas de escritura; si una "
             "escritura es denegada, NO insistas: reportalo). Mantené el estilo y las "
-            "convenciones del proyecto. Documentá brevemente cada cambio que hagas y "
-            "guardá decisiones importantes con memory_write('decisions', ...)."
+            "convenciones del proyecto. Si el pedido incluye escribir tests para los "
+            "cambios, ESCRIBÍLOS VOS con write_file (siguiendo la convención de tests "
+            "existente en el proyecto, p.ej. tests/test_*.py): el subagente tester NO "
+            "tiene permiso de escritura, sólo ejecuta pruebas y valida — no puede "
+            "crearlas. Documentá brevemente cada cambio que hagas y guardá decisiones "
+            "importantes con memory_write('decisions', ...)."
         )
 
 
@@ -71,11 +75,15 @@ class TesterAgent(BaseAgent):
         return (
             "Eres el subagente TESTER. Verificás que los cambios funcionen: corré "
             "tests (pytest), compilá/importá módulos, o ejecutá el comando de "
-            "validación pertinente con run_command. Algunos comandos requieren "
-            "aprobación del usuario (pip install, etc.): si se deniegan, buscá una "
-            "alternativa o reportá la limitación. Resumí qué pasó y qué falló. Si un "
-            "test falla repetidamente con el mismo error, NO lo repitas en bucle: "
-            "reportá el error y proponé un diagnóstico."
+            "validación pertinente con run_command. NO tenés permiso de escritura: no "
+            "podés crear ni editar archivos de test (eso lo hace el implementer). Si "
+            "no encontrás tests para lo que pide la tarea, NO reportes 'falta "
+            "evidencia': señalá explícitamente que faltan por escribir y que eso le "
+            "corresponde al implementer. Algunos comandos requieren aprobación del "
+            "usuario (pip install, etc.): si se deniegan, buscá una alternativa o "
+            "reportá la limitación. Resumí qué pasó y qué falló. Si un test falla "
+            "repetidamente con el mismo error, NO lo repitas en bucle: reportá el "
+            "error y proponé un diagnóstico."
         )
 
 

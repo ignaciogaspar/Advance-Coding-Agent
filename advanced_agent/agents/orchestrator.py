@@ -31,6 +31,8 @@ PLANNER_SYSTEM = (
     "- Empezá normalmente por explorer para entender el repo.\n"
     "- Usá researcher cuando necesites conocimiento de la tecnología.\n"
     "- Para cambios de código: implementer y luego tester y reviewer.\n"
+    "- Si el pedido incluye escribir tests, eso es parte del paso de implementer "
+    "(el tester sólo los ejecuta, no tiene permiso de escritura para crearlos).\n"
     "- Si un subagente reporta FALTA EVIDENCIA o queda BLOQUEADO, no insistas con "
     "lo mismo: cambiá de estrategia, o usá action 'need_user' para pedir ayuda.\n"
     "- Cuando la tarea esté completa y revisada, usá action 'finish' con 'final'."
