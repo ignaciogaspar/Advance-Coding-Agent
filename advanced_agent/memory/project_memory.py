@@ -76,6 +76,10 @@ class ProjectMemory:
                 parts.extend(f"  - {c}" for c in shown)
         return "\n".join(parts)
 
-    def record_session_summary(self, request: str, outcome: str) -> None:
+    def record_session_summary(self, request: str, outcome: str,
+                                modified_files: list[str] | None = None) -> None:
         ts = time.strftime("%Y-%m-%d %H:%M")
-        self.add("session_summaries", f"{ts} — Pedido: «{request[:80]}» → {outcome[:160]}")
+        line = f"{ts} — Pedido: «{request[:200]}» → {outcome[:400]}"
+        if modified_files:
+            line += f" | Archivos tocados: {', '.join(modified_files)}"
+        self.add("session_summaries", line)

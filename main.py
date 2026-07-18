@@ -74,11 +74,7 @@ def main() -> None:
         if not req:
             continue
         _run_once(system, req, show_state=args.state)
-        # Estado nuevo por pedido (memoria persiste en disco).
-        from advanced_agent.system import AgentSystem as _AS
-        system = _AS(config_path=args.config,
-                     interactive=not args.non_interactive,
-                     mock=True if args.mock else None, run_name="cli-run")
+        system.new_turn(run_name="cli-run")
 
 
 def _run_once(system, request: str, show_state: bool = False) -> None:

@@ -146,9 +146,17 @@ class Orchestrator:
                             "Revisá el estado para ver el avance parcial.")
             ctx.state.status = "blocked"
 
-        # Persistir resumen de sesión en memoria.
+        # Persistir en memoria SIN depender de que el LLM haya llamado a
+        # memory_write por su cuenta: los archivos tocados y las
+        # observaciones relevantes de esta sesión quedan disponibles para
+        # sesiones futuras (nuevo proceso) igual, aunque ningún subagente
+        # los haya guardado explícitamente.
         if ctx.memory:
-            ctx.memory.record_session_summary(request, final_answer)
+            for f in ctx.state.modified_files:
+                ctx.memory.add("key_files", f)
+            for obs in ctx.state.observations:
+                ctx.memory.add("decisions", obs)
+            ctx.memory.record_session_summary(request, final_answer, ctx.state.modified_files)
         return final_answer
 
     # ---------------- helpers ----------------

@@ -56,6 +56,28 @@ class AgentSystem:
         self.registry = ToolRegistry(self.ctx)
         self.orchestrator = Orchestrator(self.ctx, self.registry)
 
+    def new_turn(self, run_name: str = "agent-run") -> None:
+        """Arranca un nuevo turno de conversación SIN perder el TaskState.
+
+        Antes, el REPL creaba un AgentSystem nuevo en cada pedido, lo que
+        recreaba `TaskState` desde cero (`self.state = TaskState()` en
+        `__init__`) y borraba todo lo que el agente había leído/hecho en
+        turnos previos de la MISMA sesión (progress, sources,
+        modified_files, subagent_results). Eso hacía que pedidos de
+        continuación ("continua", "documenta los cambios") llegaran sin
+        contexto real.
+
+        Este método crea un Tracer nuevo (para tener una traza por
+        ejecución, como pide la consigna) y un Orchestrator nuevo (resetea
+        el anti-loop de delegaciones repetidas), pero conserva `self.state`
+        y `self.memory` intactos. La memoria persistente en disco
+        (ProjectMemory) sigue siendo la que sobrevive entre ejecuciones
+        distintas del proceso (`python3 main.py` nuevo).
+        """
+        self.tracer = Tracer(self.config.observability, run_name=run_name)
+        self.ctx.tracer = self.tracer
+        self.orchestrator = Orchestrator(self.ctx, self.registry)
+
     def run(self, request: str) -> str:
         try:
             answer = self.orchestrator.run(request)
