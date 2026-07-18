@@ -5,7 +5,6 @@ La estructura de la carpeta 'app/' es la siguiente:
 ```
 app/
 ├── __init__.py
-├── _agent_test.py
 ├── main.py
 ├── models.py
 └── routers/

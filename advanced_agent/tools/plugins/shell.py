@@ -3,6 +3,7 @@ política de comandos (deny / require_approval) validada antes de ejecutar.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 
 from ..base import Tool, ToolContext
@@ -21,10 +22,20 @@ class RunCommandTool(Tool):
 
     def run(self, ctx: ToolContext, command: str) -> str:
         cwd = str(ctx.config.workspace)
+        env = os.environ.copy()
+        # El binario `pytest` (a diferencia de `python -m pytest`) NO agrega el
+        # directorio actual a sys.path, así que un test que hace
+        # `from app.models import ...` falla con ModuleNotFoundError aunque la
+        # estructura de carpetas sea correcta. Como el workspace es la raíz
+        # del proyecto del usuario, lo agregamos siempre a PYTHONPATH para que
+        # cualquier comando Python (pytest, un script suelto, etc.) pueda
+        # importar los paquetes top-level del proyecto sin que el subagente
+        # tenga que acordarse de invocarlo de una forma particular.
+        env["PYTHONPATH"] = cwd + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
         try:
             result = subprocess.run(
                 command, shell=True, capture_output=True, text=True,
-                cwd=cwd, timeout=120,
+                cwd=cwd, timeout=120, env=env,
             )
         except subprocess.TimeoutExpired:
             return "Error: el comando excedió el timeout (120s)."
