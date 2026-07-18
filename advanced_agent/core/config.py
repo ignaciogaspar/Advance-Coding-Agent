@@ -64,7 +64,16 @@ class PolicyEngine:
 
     # ---------- helpers ----------
     def _within_workspace(self, path: str) -> Path:
-        p = (self.workspace / path).resolve() if not os.path.isabs(path) else Path(path).resolve()
+        # Los subagentes a veces expresan rutas con "/" inicial pensando en
+        # la raíz del proyecto (p.ej. "/app", copiando la forma en que el
+        # usuario escribió el pedido), no en la raíz real del filesystem.
+        # Como de todos modos CUALQUIER ruta debe caer dentro del workspace
+        # (es la defensa anti path-traversal), tratamos un "/" inicial como
+        # relativo al workspace en vez de como ruta absoluta del SO — así
+        # "/app" y "app" resuelven exactamente igual y no dependemos de que
+        # el modelo se acuerde de reintentar sin la barra.
+        normalized = path.lstrip("/") if path.startswith("/") else path
+        p = (self.workspace / normalized).resolve()
         try:
             p.relative_to(self.workspace)
         except ValueError:
