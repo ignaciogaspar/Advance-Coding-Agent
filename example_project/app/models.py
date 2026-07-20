@@ -1,5 +1,12 @@
 """Modelos Pydantic de la To-Do API."""
 from pydantic import BaseModel
+from enum import Enum
+
+
+class TaskStatus(str, Enum):
+    pending = "pending"
+    in_progress = "in_progress"
+    done = "done"
 
 
 class TaskCreate(BaseModel):
@@ -10,3 +17,4 @@ class TaskCreate(BaseModel):
 
 class Task(TaskCreate):
     id: int
+    status: TaskStatus = TaskStatus.pending

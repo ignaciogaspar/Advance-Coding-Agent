@@ -1,7 +1,8 @@
 """Router de tareas — endpoints CRUD sobre una 'base de datos' en memoria."""
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
-from ..models import Task, TaskCreate
+from ..models import Task, TaskCreate, TaskStatus
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -29,6 +30,15 @@ async def get_task(task_id: int):
     if task_id not in _DB:
         raise HTTPException(status_code=404, detail="Task not found")
     return _DB[task_id]
+
+
+@router.patch("/{task_id}", response_model=Task)
+async def update_task_status(task_id: int, status: TaskStatus):
+    if task_id not in _DB:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task = _DB[task_id]
+    task.status = status
+    return task
 
 
 @router.delete("/{task_id}", status_code=204)
